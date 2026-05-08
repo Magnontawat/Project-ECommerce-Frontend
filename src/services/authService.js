@@ -1,6 +1,6 @@
 import api from './api'
 
-// Login User — POST /api/auth/login
+// Login User — POST /api/auth/login (จุดยิง API ออกไปยัง backend)
 export async function loginUser({ email, password }) {
   try {
     const response = await api.post('/auth/login', { email, password })

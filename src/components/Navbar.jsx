@@ -211,7 +211,7 @@ export default function Navbar() {
   const { user, isLoggedIn, logout, openLogin, openRegister } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin"; //บอกว่า isAdmin = true หรือ false จากการเช็ค role ของ user
 
   return (
     <header className="fixed top-0 left-0 right-0 h-[70px] md:h-[80px] bg-bg-main z-50 border-b border-border-color">

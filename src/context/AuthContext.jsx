@@ -100,6 +100,17 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
+
+//     // กลุ่มที่ 1 — User State
+// user, isLoggedIn, isLoading, error
+
+// // กลุ่มที่ 2 — Auth Actions
+// login, register, logout, clearError
+
+// // กลุ่มที่ 3 — Drawer
+// isAuthDrawerOpen, authMode, setAuthMode,
+// openLogin, openRegister, closeAuthDrawer
+
     <AuthContext.Provider value={{
       user,
       isLoggedIn,

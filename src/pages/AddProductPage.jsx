@@ -113,6 +113,8 @@ export default function AddProductPage() {
       setSubmitError("กรุณากรอกข้อมูลที่จำเป็น: ชื่อหนังสือ, ชื่อผู้แต่ง และหมวดหมู่");
       return;
     }
+
+    //some คือ array method ที่เช็คว่าใน array มี element ไหนที่ผ่านเงื่อนไขที่กำหนดบ้าง ถ้ามีจะ return true ถ้าไม่มีเลยจะ return false
     const invalidVariant = variants.some(
       (v) => !v.price || isNaN(Number(v.price)) || !v.stock || isNaN(Number(v.stock))
     );
