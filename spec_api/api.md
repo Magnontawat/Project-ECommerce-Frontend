@@ -12,31 +12,20 @@
 
 ### 🗄️ Database
 
-- [ ] **`book_variants.stock` รองรับ `NULL`**
-  - ตรวจสอบว่า column `stock` ไม่ได้กำหนดเป็น `NOT NULL`
-  - ถ้ายังเป็น `NOT NULL` ให้รัน:
-    ```sql
-    ALTER TABLE book_variants MODIFY COLUMN stock INT NULL;
-    ```
+- [x] **`book_variants.stock` รองรับ `NULL`**
+  - แก้ใน `database/init.sql`: `stock INT NULL DEFAULT 0`
   - เหตุผล: ebook variant ไม่มี stock จริง — Frontend ส่ง `null` มาเสมอ
 
 ---
 
 ### 🛠️ API — แก้ไข Endpoint ที่มีอยู่แล้ว
 
-- [ ] **`POST /api/books` — ยอมรับ `stock: null` สำหรับ ebook**
-  - ปัจจุบัน validation อาจ require stock ทุก variant
-  - แก้ให้ข้าม stock validation เมื่อ `type === "ebook"`
-  - ตัวอย่าง logic:
-    ```js
-    // แทนที่จะ: if (!v.stock) throw error
-    if (v.type !== "ebook" && (v.stock == null || isNaN(v.stock))) {
-      throw new Error(`variant "${v.type}" ต้องมี stock`)
-    }
-    ```
+- [x] **`POST /api/books` — ยอมรับ `stock: null` สำหรับ ebook**
+  - แก้ validation ใน `bookController.js`: ข้าม stock check เมื่อ `type === "ebook"`
+  - ใช้ `v.type === 'ebook' ? (v.stock ?? null) : v.stock` ตอน insert
 
-- [ ] **`PUT /api/books/:id` — ยอมรับ `stock: null` สำหรับ ebook**
-  - เช่นเดียวกับ POST — ข้าม stock validation เมื่อ `type === "ebook"`
+- [x] **`PUT /api/books/:id` — ยอมรับ `stock: null` สำหรับ ebook**
+  - แก้ validation เช่นเดียวกับ POST
   - Frontend ส่งเฉพาะ `title`, `author`, `genre`, `variants` (ไม่ส่ง `cover_image`)
   - variants ที่ส่งมาจะ **ลบ variants เดิมทั้งหมด** แล้วแทนด้วยชุดใหม่ (ตาม spec เดิม)
 
@@ -44,26 +33,26 @@
 
 ### 🚀 API — Endpoint ใหม่ที่ต้องสร้าง (Planned)
 
-- [ ] **`GET /api/cart`** — ดึงรายการสินค้าในตะกร้าของ user ที่ login อยู่
+- [x] **`GET /api/cart`** — ดึงรายการสินค้าในตะกร้าของ user ที่ login อยู่
   - Auth: Bearer Token (User)
   - Response: รายการ cart items พร้อมข้อมูล book + variant
 
-- [ ] **`DELETE /api/cart/items/:id`** — ลบสินค้าออกจากตะกร้า
+- [x] **`DELETE /api/cart/items/:id`** — ลบสินค้าออกจากตะกร้า
   - Auth: Bearer Token (User)
   - `:id` คือ cart item ID (ไม่ใช่ variantId)
 
-- [ ] **`PUT /api/cart/items/:id`** — แก้ไขจำนวนสินค้าในตะกร้า
+- [x] **`PUT /api/cart/items/:id`** — แก้ไขจำนวนสินค้าในตะกร้า
   - Auth: Bearer Token (User)
   - Body: `{ "quantity": 2 }`
 
-- [ ] **`POST /api/orders`** — สร้าง order จาก cart ปัจจุบัน
+- [x] **`POST /api/orders`** — สร้าง order จาก cart ปัจจุบัน
   - Auth: Bearer Token (User)
   - ล้าง cart หลัง order สำเร็จ
 
-- [ ] **`GET /api/orders`** — ดึงประวัติ order ทั้งหมดของ user
+- [x] **`GET /api/orders`** — ดึงประวัติ order ทั้งหมดของ user
   - Auth: Bearer Token (User)
 
-- [ ] **`GET /api/orders/:id`** — ดึงรายละเอียด order ตาม ID
+- [x] **`GET /api/orders/:id`** — ดึงรายละเอียด order ตาม ID
   - Auth: Bearer Token (User)
 
 ---
@@ -83,7 +72,7 @@
 | 7 | `/api/books/:id` | PUT | Admin |
 | 8 | `/api/books/:id` | DELETE | Admin |
 
-### 📋 Planned (DB พร้อม รอ implement)
+### ✅ Implemented (เพิ่มเติม)
 
 | # | Endpoint | Method | Auth |
 |---|---|---|---|
@@ -456,9 +445,9 @@ formData.append('title',  'ชื่อหนังสือที่แก้�
 formData.append('author', 'ชื่อผู้แต่ง')
 formData.append('genre',  'fantasy')
 formData.append('variants', JSON.stringify([
-  { type: 'th',    price: 320, stock: 50 },
-  { type: 'en',    price: 450, stock: 30 },
-  { type: 'ebook', price: 149, stock: 999 }
+  { type: 'th',    price: 320, stock: 50   },
+  { type: 'en',    price: 450, stock: 30   },
+  { type: 'ebook', price: 149, stock: null }  // ebook ส่ง null เสมอ — ไม่มี stock จริง
 ]))
 // ไม่ส่ง cover_image, publisher, publish_year, synopsis ใน inline edit
 ```
