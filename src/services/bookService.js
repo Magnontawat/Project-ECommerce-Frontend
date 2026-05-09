@@ -30,9 +30,36 @@ export async function createBook(formData) {
     const response = await api.post('/books', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
-    return response.data  
+    return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'เกิดข้อผิดพลาดในการเพิ่มหนังสือ'
+    throw new Error(message)
+  }
+}
+
+// แก้ไขข้อมูลหนังสือ (Admin Only)
+// PUT /api/books/:id — ส่งเฉพาะ field ที่ต้องการแก้ไข (Partial Update)
+// ใช้ multipart/form-data เพื่อให้รองรับการเปลี่ยนรูปปกในอนาคต
+export async function updateBook(id, formData) {
+  try {
+    const response = await api.put(`/books/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  } catch (error) {
+    const message = error.response?.data?.message || 'เกิดข้อผิดพลาดในการแก้ไขหนังสือ'
+    throw new Error(message)
+  }
+}
+
+// ลบหนังสือออกจากระบบ (Admin Only)
+// DELETE /api/books/:id — ลบทั้ง book และ variants ทั้งหมดในคราวเดียว
+export async function deleteBook(id) {
+  try {
+    const response = await api.delete(`/books/${id}`)
+    return response.data
+  } catch (error) {
+    const message = error.response?.data?.message || 'เกิดข้อผิดพลาดในการลบหนังสือ'
     throw new Error(message)
   }
 }

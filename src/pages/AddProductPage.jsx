@@ -114,9 +114,12 @@ export default function AddProductPage() {
       return;
     }
 
-    //some คือ array method ที่เช็คว่าใน array มี element ไหนที่ผ่านเงื่อนไขที่กำหนดบ้าง ถ้ามีจะ return true ถ้าไม่มีเลยจะ return false
+    // some คือ array method ที่เช็คว่าใน array มี element ไหนที่ผ่านเงื่อนไขบ้าง
+    // ebook ไม่มี stock จริง จึงข้ามการเช็ค stock สำหรับ ebook
     const invalidVariant = variants.some(
-      (v) => !v.price || isNaN(Number(v.price)) || !v.stock || isNaN(Number(v.stock))
+      (v) =>
+        !v.price || isNaN(Number(v.price)) ||
+        (v.type !== "ebook" && (!v.stock || isNaN(Number(v.stock))))
     );
     if (invalidVariant) {
       setSubmitError("กรุณากรอกราคาและจำนวนสต็อกให้ครบในทุก Variant");
@@ -138,7 +141,13 @@ export default function AddProductPage() {
     data.append("publish_year", form.publishYear);
     data.append("genre", form.genre);
     data.append("synopsis", form.synopsis);
-    data.append("variants", JSON.stringify(variants));
+    // ส่ง stock เป็น null สำหรับ ebook — backend ต้องรองรับ null stock
+    const variantsForApi = variants.map((v) => ({
+      type:  v.type,
+      price: Number(v.price),
+      stock: v.type === "ebook" ? null : Number(v.stock),
+    }));
+    data.append("variants", JSON.stringify(variantsForApi));
     if (coverFile) data.append("cover_image", coverFile);
 
     try {
@@ -401,20 +410,29 @@ export default function AddProductPage() {
                     </div>
                   </div>
 
-                  {/* สต็อก */}
-                  <div className="w-full sm:w-32">
-                    <FieldLabel required>จำนวน (Stock)</FieldLabel>
-                    <input
-                      id={`variant-stock-${index}`}
-                      type="number"
-                      min="0"
-                      placeholder="0"
-                      value={variant.stock}
-                      onChange={(e) => handleVariantChange(index, "stock", e.target.value)}
-                      className={inputClass}
-                      required
-                    />
-                  </div>
+                  {/* สต็อก — ซ่อนสำหรับ ebook เพราะถือว่า stock ไม่จำกัด (∞) */}
+                  {variant.type !== "ebook" ? (
+                    <div className="w-full sm:w-32">
+                      <FieldLabel required>จำนวน (Stock)</FieldLabel>
+                      <input
+                        id={`variant-stock-${index}`}
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={variant.stock}
+                        onChange={(e) => handleVariantChange(index, "stock", e.target.value)}
+                        className={inputClass}
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full sm:w-32 flex flex-col justify-end">
+                      <FieldLabel>จำนวน (Stock)</FieldLabel>
+                      <div className={`${inputClass} text-text-muted flex items-center`}>
+                        ∞ ไม่จำกัด
+                      </div>
+                    </div>
+                  )}
 
                   {/* ปุ่มลบ */}
                   {variants.length > 1 && (

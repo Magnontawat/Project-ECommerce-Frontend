@@ -48,16 +48,17 @@ src/
 │   └── useLatestProducts.js
 │
 ├── pages/
-│   ├── HomePage.jsx       — หน้าหลัก (Recommended + Browse All + Pagination)
-│   ├── BookDetailPage.jsx — รายละเอียดหนังสือ
-│   ├── AddProductPage.jsx — Admin: เพิ่มหนังสือใหม่ (Protected)
-│   ├── LoginPage.jsx      — หน้า Login แยก (ยังไม่ได้ใช้ใน route)
-│   └── RegisterPage.jsx   — หน้า Register แยก (ยังไม่ได้ใช้ใน route)
+│   ├── HomePage.jsx            — หน้าหลัก (Recommended + Browse All + Pagination)
+│   ├── BookDetailPage.jsx      — รายละเอียดหนังสือ
+│   ├── AddProductPage.jsx      — Admin: เพิ่มหนังสือใหม่ (Protected)
+│   ├── ManageProductsPage.jsx  — Admin: ตารางจัดการสินค้าทั้งหมด (Protected) รองรับ inline edit + delete พร้อม confirm
+│   ├── LoginPage.jsx           — หน้า Login แยก (ยังไม่ได้ใช้ใน route)
+│   └── RegisterPage.jsx        — หน้า Register แยก (ยังไม่ได้ใช้ใน route)
 │
 ├── services/
 │   ├── api.js            — Axios instance + request interceptor (auto token) เท่านั้น
 │   ├── authService.js    — login / register / logout (เรียก API)
-│   └── bookService.js    — fetchBooks / fetchBookById / createBook (admin only)
+│   └── bookService.js    — fetchBooks / fetchBookById / createBook / updateBook / deleteBook (admin only)
 │
 └── data/
     ├── mockData.js       — Mock books (8 เล่ม) สำหรับ dev ก่อนมี backend
@@ -107,9 +108,10 @@ src/
 ## Routes
 
 ```
-/                     → HomePage          (public)
-/books/:id            → BookDetailPage    (public)
-/admin/add-product    → AddProductPage    (ProtectedRoute — role: "admin")
+/                          → HomePage               (public)
+/books/:id                 → BookDetailPage          (public)
+/admin/add-product         → AddProductPage          (ProtectedRoute — role: "admin")
+/admin/manage-products     → ManageProductsPage      (ProtectedRoute — role: "admin")
 ```
 
 ### ProtectedRoute Logic (`src/components/ProtectedRoute.jsx`)
@@ -144,12 +146,62 @@ npm run lint     # ตรวจสอบ code style
 
 ---
 
+## Admin Panel
+
+มี 2 หน้า ทั้งคู่ Protected ด้วย `ProtectedRoute role="admin"` และเข้าถึงได้จาก dropdown ใน Navbar
+
+### AddProductPage (`/admin/add-product`)
+
+- Form เพิ่มหนังสือใหม่ส่งผ่าน `POST /api/books` (multipart/form-data)
+- รองรับอัปโหลดรูปปก, หมวดหมู่ dropdown, และ variants (TH / EN / E-Book)
+- ebook ไม่มี stock input — แสดง "∞ ไม่จำกัด" แทน และส่ง `stock: null` ไป backend
+
+### ManageProductsPage (`/admin/manage-products`)
+
+ตารางจัดการสินค้าทั้งหมด ดึงข้อมูลจาก `GET /api/books`
+
+**Summary bar** (คำนวณจาก `books` state ที่โหลดมาแล้ว):
+- "หนังสือทั้งหมด X เรื่อง" — นับจำนวน unique books
+- "จำนวนหนังสือใน Stock ทั้งหมด X เล่ม (ไม่รวม E-Book)" — รวม stock เฉพาะ th + en
+
+**Variant display:** `TH ฿320 (50)  EN ฿450 (30)  E-Book ฿149 (∞)`
+
+**BookRow component — 3 โหมด (early return pattern):**
+
+| โหมด | เงื่อนไข | แสดง |
+|------|---------|------|
+| display | ปกติ | ข้อมูล + ปุ่ม [แก้ไข] [ลบ] |
+| editing | `isEditing === true` | input fields + [บันทึก] [ยกเลิก] |
+| confirm-delete | `confirmingDelete === true` | ข้อความยืนยัน + [ยืนยันลบ] [ยกเลิก] |
+
+**State ใน ManageProductsPage (parent):**
+- `editingId` / `savingId` / `confirmDeleteId` / `deletingId` — ป้องกัน 2 แถวเปิดพร้อมกัน
+- `rowStatus` — `{ [bookId]: { type, message } }` แสดงผล success/error ชั่วคราว 3 วินาที
+
+**Form state ใน BookRow (local):** reset จาก `book` prop ทุกครั้งที่ `isEditing` กลายเป็น `true`
+
+**Inline edit รองรับ:** title, author, genre (dropdown), ราคา + stock ต่อ variant, เพิ่ม/ลบ variant
+- เพิ่ม variant: แสดงปุ่มเฉพาะ type ที่ยังไม่มีอยู่ในรายการ (สูงสุด 3 ประเภท)
+- ลบ variant: ซ่อนปุ่ม × ถ้าเหลือ 1 รายการ (ต้องมีอย่างน้อย 1)
+- ebook: ไม่มี stock input แสดง `∞` แทน
+
+---
+
+## กฎ ebook Stock
+
+- `ebook` variant ถือว่า stock ไม่จำกัด → Frontend แสดงเป็น `∞`
+- Frontend ส่ง `stock: null` ไปให้ backend **เสมอ** เมื่อ `type === "ebook"` (ทั้ง POST และ PUT)
+- **ไม่มี** stock input ใน UI สำหรับ ebook ทั้งใน AddProductPage และ ManageProductsPage
+- DB column `book_variants.stock` ต้องรองรับ `NULL` — ดู checklist ใน `spec_api/api.md`
+
+---
+
 ## สิ่งที่ควรรู้ก่อนแก้ไข
 
-- **ไม่ต้อง** เขียน Authorization header ใน service — interceptor จัดการให้แล้ว
+- **ไม่ต้อง** เขียน Authorization header ใน service — interceptor ใน `api.js` จัดการให้แล้ว
 - **ไม่ต้อง** import `React` ใน JSX file — React 17+ ทำให้ไม่ต้องเขียนแล้ว
 - `useAuth()` import ได้จากทั้ง `../context/AuthContext` และ `../hooks/useAuth` (เหมือนกัน)
-- `fetchBooks` และ `fetchBookById` อยู่ใน `bookService.js` — `api.js` มีแค่ Axios config เท่านั้น
+- `api.js` มีแค่ Axios config — logic เรียก API ทั้งหมดอยู่ใน service files
 - **Code style:** ไม่ใส่ semicolon (`;`) ท้ายบรรทัด — ทั้งไฟล์ `.js` และ `.jsx`
 - สีและ font ที่ใช้บ่อยอยู่ใน `src/index.css` ในรูปแบบ CSS variable เช่น `--color-brand`, `--font-serif`
 - Tailwind custom color: `bg-brand`, `text-brand`, `hover:bg-brand-hover`

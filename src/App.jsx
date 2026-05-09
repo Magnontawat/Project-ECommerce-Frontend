@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage'
 import BookDetailPage from './pages/BookDetailPage'
 import AuthDrawer from './components/AuthDrawer'
 import AddProductPage from './pages/AddProductPage'
+import ManageProductsPage from './pages/ManageProductsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -19,6 +20,12 @@ function App() {
           <Route path="/admin/add-product" element={
             <ProtectedRoute role="admin">
               <AddProductPage />
+            </ProtectedRoute>
+          }
+          />
+          <Route path="/admin/manage-products" element={
+            <ProtectedRoute role="admin">
+              <ManageProductsPage />
             </ProtectedRoute>
           }
           />

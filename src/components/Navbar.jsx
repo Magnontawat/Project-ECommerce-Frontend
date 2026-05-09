@@ -125,6 +125,30 @@ function UserDropdown({ user, logout }) {
                 </svg>
                 เพิ่มหนังสือ
               </button>
+              <button
+                id="navbar-dropdown-manage-products"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/admin/manage-products");
+                }}
+                className="w-full text-left px-4 py-2.5 text-[0.875rem] text-text-main hover:bg-gray-50 flex items-center gap-2.5 transition-colors"
+              >
+                <svg
+                  className="w-4 h-4 text-brand"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                จัดการสินค้า
+              </button>
               <div className="border-t border-border-color my-1" />
               <button
                 id="navbar-dropdown-logout-admin"
@@ -360,28 +384,52 @@ export default function Navbar() {
 
                   {isAdmin ? (
                     // ── Mobile Admin ──
-                    <button
-                      className="text-left text-text-main py-2 flex items-center gap-2"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        navigate("/admin/add-product");
-                      }}
-                    >
-                      <svg
-                        className="w-4 h-4 text-brand"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    <>
+                      <button
+                        className="text-left text-text-main py-2 flex items-center gap-2"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          navigate("/admin/add-product");
+                        }}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                      เพิ่มหนังสือ
-                    </button>
+                        <svg
+                          className="w-4 h-4 text-brand"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 4v16m8-8H4"
+                          />
+                        </svg>
+                        เพิ่มหนังสือ
+                      </button>
+                      <button
+                        className="text-left text-text-main py-2 flex items-center gap-2"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          navigate("/admin/manage-products");
+                        }}
+                      >
+                        <svg
+                          className="w-4 h-4 text-brand"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                          />
+                        </svg>
+                        จัดการสินค้า
+                      </button>
+                    </>
                   ) : (
                     // ── Mobile User ──
                     <button
