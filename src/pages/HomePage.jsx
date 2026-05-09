@@ -31,7 +31,7 @@ export default function HomePage() {
               ดูทั้งหมด &rarr;
             </Link>
           </div>
-          <BookGrid books={recommended} loading={loading} columns={4} />
+          <BookGrid books={recommended} loading={loading} />
         </div>
       </section>
 
@@ -41,7 +41,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-4 md:mb-6 pb-2 md:pb-4">
             <h2 className="text-2xl md:text-3xl text-text-main font-serif font-medium">หนังสือทั้งหมด</h2>
           </div>
-          <BookGrid books={paginatedBooks} loading={loading} columns={4} />
+          <BookGrid books={paginatedBooks} loading={loading} />
 
           {/* ส่วนตัวเปลี่ยนหน้า (Pagination) */}
           {totalPages > 1 && (

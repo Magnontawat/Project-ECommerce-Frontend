@@ -134,7 +134,7 @@
     "variants": [
       { "id": 1, "book_id": 1, "type": "th",    "price": "320.00", "stock": 50  },
       { "id": 2, "book_id": 1, "type": "en",    "price": "450.00", "stock": 30  },
-      { "id": 3, "book_id": 1, "type": "ebook", "price": "149.00", "stock": 999 }
+      { "id": 3, "book_id": 1, "type": "ebook", "price": "149.00", "stock": null }
     ]
   }
 ]
@@ -176,7 +176,7 @@
   "variants": [
     { "id": 1, "book_id": 1, "type": "th",    "price": "320.00", "stock": 50  },
     { "id": 2, "book_id": 1, "type": "en",    "price": "450.00", "stock": 30  },
-    { "id": 3, "book_id": 1, "type": "ebook", "price": "149.00", "stock": 999 }
+    { "id": 3, "book_id": 1, "type": "ebook", "price": "149.00", "stock": null }
   ]
 }
 ```
@@ -516,7 +516,7 @@ formData.append('variants', JSON.stringify([
 
 ---
 
-## 9. Get Cart 📋
+## 9. Get Cart ✅
 
 ดึงข้อมูลตะกร้าของผู้ใช้พร้อมรายละเอียดหนังสือและ Variant ครบถ้วน
 
@@ -579,7 +579,7 @@ formData.append('variants', JSON.stringify([
 
 ---
 
-## 10. Remove Cart Item 📋
+## 10. Remove Cart Item ✅
 
 ลบรายการสินค้าออกจากตะกร้า
 
@@ -606,7 +606,7 @@ formData.append('variants', JSON.stringify([
 
 ---
 
-## 11. Update Cart Item Quantity 📋
+## 11. Update Cart Item Quantity ✅
 
 แก้ไขจำนวนสินค้าในตะกร้า (ต้องการลบให้ใช้ DELETE endpoint แทน)
 
@@ -644,7 +644,7 @@ formData.append('variants', JSON.stringify([
 
 ---
 
-## 12. Checkout (Create Order) 📋
+## 12. Checkout (Create Order) ✅
 
 สร้างคำสั่งซื้อจากสินค้าในตะกร้าทั้งหมด แล้วล้างตะกร้า
 
@@ -715,7 +715,7 @@ formData.append('variants', JSON.stringify([
 
 ---
 
-## 13. Get Order History 📋
+## 13. Get Order History ✅
 
 ดึงประวัติคำสั่งซื้อทั้งหมดของผู้ใช้ (เรียงจากใหม่ไปเก่า)
 
@@ -757,7 +757,7 @@ formData.append('variants', JSON.stringify([
 
 ---
 
-## 14. Get Order Detail 📋
+## 14. Get Order Detail ✅
 
 ดึงรายละเอียดคำสั่งซื้อครบถ้วนตาม ID
 
@@ -823,7 +823,7 @@ formData.append('variants', JSON.stringify([
 ## วิธีแนบ Token ใน Header
 
 ```javascript
-const token = localStorage.getItem('token');
+const token = localStorage.getItem('shopter_token');
 
 const response = await fetch('http://localhost:5000/api/cart', {
   method: 'GET',
@@ -866,7 +866,7 @@ const login = async (email, password) => {
   });
   const data = await response.json();
   if (response.ok) {
-    localStorage.setItem('token', data.token);
+    localStorage.setItem('shopter_token', data.token);
     // data.role === "user" หรือ "admin"
   }
 };
@@ -874,25 +874,19 @@ const login = async (email, password) => {
 
 **ดึงตะกร้า:**
 ```javascript
-const fetchCart = async (token) => {
-  const response = await fetch('http://localhost:5000/api/cart', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  const data = await response.json();
-  // data.items คือ array ของสินค้าในตะกร้า พร้อม book+variant info
-};
+// ในโปรเจกต์นี้ ใช้ api instance จาก api.js แทน — interceptor แนบ token ให้อัตโนมัติ
+const fetchCart = async () => {
+  const response = await api.get('/cart')
+  // response.data.items คือ array ของสินค้าในตะกร้า พร้อม book+variant info
+}
 ```
 
 **Checkout:**
 ```javascript
-const checkout = async (token) => {
-  const response = await fetch('http://localhost:5000/api/orders', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  const data = await response.json();
-  // data.order คือ order ที่เพิ่งสร้าง พร้อม items ครบถ้วน
-};
+const checkout = async () => {
+  const response = await api.post('/orders')
+  // response.data.order คือ order ที่เพิ่งสร้าง พร้อม items ครบถ้วน
+}
 ```
 
 **เพิ่มหนังสือใหม่ (Admin — multipart/form-data):**

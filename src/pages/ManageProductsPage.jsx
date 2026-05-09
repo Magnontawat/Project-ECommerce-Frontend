@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { fetchBooks, updateBook, deleteBook } from "../services/bookService"
 
+
 // ── หมวดหมู่หนังสือ ──────────────────────────────────────────────────────────
 const GENRES = [
   { value: "fantasy",    label: "Fantasy" },
@@ -22,8 +23,10 @@ const GENRES = [
   { value: "other",      label: "อื่นๆ" },
 ]
 
+
 // Map genre value → label สำหรับแสดงผล
 const GENRE_LABEL = Object.fromEntries(GENRES.map((g) => [g.value, g.label]))
+
 
 // สีของ badge แต่ละ variant type
 const VARIANT_BADGE = {
@@ -40,6 +43,7 @@ const inputClass =
 // ─────────────────────────────────────────────────────────────────────────────
 // ── SkeletonRow — แถว placeholder ขณะโหลดข้อมูล ─────────────────────────────
 // ─────────────────────────────────────────────────────────────────────────────
+
 function SkeletonRow() {
   return (
     <tr className="border-b border-border-color animate-pulse">
@@ -126,6 +130,7 @@ function BookRow({
 
   // เมื่อเข้าโหมดแก้ไข → copy ข้อมูลจาก book มาเป็น form state
   // ทำแบบนี้เพื่อให้แก้ไขได้โดยไม่กระทบ book object เดิม
+  
   useEffect(() => {
     if (isEditing) {
       setForm({
@@ -575,6 +580,12 @@ export default function ManageProductsPage() {
     }
   }
 
+  // รวม stock เฉพาะ th และ en — ebook ถือเป็น ∞ จึงไม่นับรวม
+  const totalPhysicalStock = books.reduce((sum, book) => {
+    const physical = book.variants?.filter((v) => v.type !== "ebook") ?? []
+    return sum + physical.reduce((s, v) => s + (v.stock ?? 0), 0)
+  }, 0)
+
   // ── UI ────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-bg-main py-10 px-4">
@@ -617,29 +628,22 @@ export default function ManageProductsPage() {
         {/* ตารางสินค้า */}
         <div className="bg-white rounded-xl border border-border-color shadow-sm overflow-hidden">
 
-          {/* สรุปจำนวนหนังสือและ stock */}
-          {!isLoading && !fetchError && (() => {
-            // รวม stock เฉพาะ th และ en — ebook ถือเป็น ∞ จึงไม่นับรวม
-            const totalPhysicalStock = books.reduce((sum, book) => {
-              const physical = book.variants?.filter((v) => v.type !== "ebook") ?? []
-              return sum + physical.reduce((s, v) => s + (v.stock ?? 0), 0)
-            }, 0)
-            return (
-              <div className="px-6 py-3.5 border-b border-border-color flex flex-wrap items-center gap-x-6 gap-y-1">
-                <span className="text-sm text-text-muted">
-                  หนังสือทั้งหมด{" "}
-                  <span className="font-semibold text-text-main">{books.length}</span>{" "}
-                  เรื่อง
-                </span>
-                <span className="text-sm text-text-muted">
-                  จำนวนหนังสือใน Stock ทั้งหมด{" "}
-                  <span className="font-semibold text-text-main">{totalPhysicalStock.toLocaleString()}</span>{" "}
-                  เล่ม
-                  <span className="text-xs ml-1 opacity-60">(ไม่รวม E-Book)</span>
-                </span>
-              </div>
-            )
-          })()}
+          {/* Summary bar */}
+          {!isLoading && !fetchError && (
+            <div className="px-6 py-3.5 border-b border-border-color flex flex-wrap items-center gap-x-6 gap-y-1">
+              <span className="text-sm text-text-muted">
+                หนังสือทั้งหมด{" "}
+                <span className="font-semibold text-text-main">{books.length}</span>{" "}
+                เรื่อง
+              </span>
+              <span className="text-sm text-text-muted">
+                จำนวนหนังสือใน Stock ทั้งหมด{" "}
+                <span className="font-semibold text-text-main">{totalPhysicalStock.toLocaleString()}</span>{" "}
+                เล่ม
+                <span className="text-xs ml-1 opacity-60">(ไม่รวม E-Book)</span>
+              </span>
+            </div>
+          )}
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">

@@ -1,168 +1,161 @@
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { createBook } from "../services/bookService";
+import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { createBook } from '../services/bookService'
 
-// ── หมวดหมู่หนังสือที่ใช้บ่อย ─────────────────────────────────────────────
+// ── ค่าคงที่ ───────────────────────────────────────────────────────────────────
+
 const GENRES = [
-  { value: "fantasy", label: "Fantasy — แฟนตาซี" },
-  { value: "romance", label: "Romance — โรแมนติก" },
-  { value: "thriller", label: "Thriller — ระทึกขวัญ" },
-  { value: "mystery", label: "Mystery — สืบสวนสอบสวน" },
-  { value: "horror", label: "Horror — สยองขวัญ" },
-  { value: "sci-fi", label: "Sci-Fi — นิยายวิทยาศาสตร์" },
-  { value: "historical", label: "Historical Fiction — นิยายอิงประวัติศาสตร์" },
-  { value: "adventure", label: "Adventure — ผจญภัย" },
-  { value: "drama", label: "Drama — ดราม่า" },
-  { value: "comedy", label: "Comedy — ตลกขบขัน" },
-  { value: "young-adult", label: "Young Adult — วัยรุ่น" },
-  { value: "literary", label: "Literary Fiction — นิยายวรรณกรรม" },
-  { value: "action", label: "Action — แอ็คชั่น" },
-  { value: "BL", label: "BL — นิยายชายรักชาย" },
-  { value: "GL", label: "GL — นิยายหญิงรักหญิง" },
-  { value: "other", label: "Other — อื่นๆ" },
-];
+  { value: 'fantasy',    label: 'Fantasy — แฟนตาซี' },
+  { value: 'romance',    label: 'Romance — โรแมนติก' },
+  { value: 'thriller',  label: 'Thriller — ระทึกขวัญ' },
+  { value: 'mystery',   label: 'Mystery — สืบสวนสอบสวน' },
+  { value: 'horror',    label: 'Horror — สยองขวัญ' },
+  { value: 'sci-fi',    label: 'Sci-Fi — นิยายวิทยาศาสตร์' },
+  { value: 'historical',label: 'Historical Fiction — นิยายอิงประวัติศาสตร์' },
+  { value: 'adventure', label: 'Adventure — ผจญภัย' },
+  { value: 'drama',     label: 'Drama — ดราม่า' },
+  { value: 'comedy',    label: 'Comedy — ตลกขบขัน' },
+  { value: 'young-adult',label: 'Young Adult — วัยรุ่น' },
+  { value: 'literary',  label: 'Literary Fiction — นิยายวรรณกรรม' },
+  { value: 'action',    label: 'Action — แอ็คชั่น' },
+  { value: 'BL',        label: 'BL — นิยายชายรักชาย' },
+  { value: 'GL',        label: 'GL — นิยายหญิงรักหญิง' },
+  { value: 'other',     label: 'Other — อื่นๆ' },
+]
 
-// ── ค่าเริ่มต้นของ Variant ─────────────────────────────────────────────────
 const VARIANT_TYPES = [
-  { value: "th", label: "🇹🇭 ภาษาไทย (TH)" },
-  { value: "en", label: "🇬🇧 ภาษาอังกฤษ (EN)" },
-  { value: "ebook", label: "📱 E-Book" },
-];
+  { value: 'th',    label: '🇹🇭 ภาษาไทย (TH)' },
+  { value: 'en',    label: '🇬🇧 ภาษาอังกฤษ (EN)' },
+  { value: 'ebook', label: '📱 E-Book' },
+]
 
-const emptyVariant = () => ({ type: "th", price: "", stock: "" });
+const emptyVariant = () => ({ type: 'th', price: '', stock: '' })
 
-// ── Label + required mark ──────────────────────────────────────────────────
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
 function FieldLabel({ children, required }) {
   return (
     <label className="block text-sm font-medium text-text-main mb-1.5">
       {children}
       {required && <span className="text-red-500 ml-1">*</span>}
     </label>
-  );
+  )
 }
 
-// ── Input สไตล์กลาง ────────────────────────────────────────────────────────
 const inputClass =
-  "w-full rounded-md border border-border-color bg-white px-3.5 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition-colors";
+  'w-full rounded-md border border-border-color bg-white px-3.5 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition-colors'
 
-// ── หน้า Add Product (Admin) ───────────────────────────────────────────────
+// ── Page ───────────────────────────────────────────────────────────────────────
+
 export default function AddProductPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
-  // ── Form State ───────────────────────────────────────────────────────────
   const [form, setForm] = useState({
-    title: "",
-    author: "",
-    publisher: "",
-    publishYear: "",
-    genre: "",
-    synopsis: "",
-  });
-  const [variants, setVariants] = useState([emptyVariant()]);
-  const [coverFile, setCoverFile] = useState(null);
-  const [coverPreview, setCoverPreview] = useState(null);
+    title: '',
+    author: '',
+    publisher: '',
+    publishYear: '',
+    genre: '',
+    synopsis: '',
+  })
+  const [variants, setVariants] = useState([emptyVariant()])
+  const [coverFile, setCoverFile] = useState(null)
+  const [coverPreview, setCoverPreview] = useState(null)
 
-  // ── Feedback State ───────────────────────────────────────────────────────
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
 
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef(null)
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
   const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setForm((prev) => ({ ...prev, [name]: value }))
+  }
 
-  // Variant: เปลี่ยนค่า field ใน variant index ที่ระบุ
   const handleVariantChange = (index, field, value) => {
     setVariants((prev) =>
       prev.map((v, i) => (i === index ? { ...v, [field]: value } : v))
-    );
-  };
+    )
+  }
 
-  // เพิ่ม variant ใหม่ (สูงสุด 3 ประเภท)
   const addVariant = () => {
-    if (variants.length >= 3) return;
-    setVariants((prev) => [...prev, emptyVariant()]);
-  };
+    if (variants.length >= 3) return
+    setVariants((prev) => [...prev, emptyVariant()])
+  }
 
-  // ลบ variant (ต้องเหลืออย่างน้อย 1)
   const removeVariant = (index) => {
-    if (variants.length <= 1) return;
-    setVariants((prev) => prev.filter((_, i) => i !== index));
-  };
+    if (variants.length <= 1) return
+    setVariants((prev) => prev.filter((_, i) => i !== index))
+  }
 
-  // รูปปก: preview ก่อน upload
   const handleCoverChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCoverFile(file);
-    const url = URL.createObjectURL(file);
-    setCoverPreview(url);
-  };
+    const file = e.target.files?.[0]
+    if (!file) return
+    setCoverFile(file)
+    setCoverPreview(URL.createObjectURL(file))
+  }
 
-  // ── Submit ───────────────────────────────────────────────────────────────
+  // ── Submit ────────────────────────────────────────────────────────────────
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitError(null);
+    e.preventDefault()
+    setSubmitError(null)
 
-    // Validation
     if (!form.title || !form.author || !form.genre) {
-      setSubmitError("กรุณากรอกข้อมูลที่จำเป็น: ชื่อหนังสือ, ชื่อผู้แต่ง และหมวดหมู่");
-      return;
+      setSubmitError('กรุณากรอกข้อมูลที่จำเป็น: ชื่อหนังสือ, ชื่อผู้แต่ง และหมวดหมู่')
+      return
     }
 
-    // some คือ array method ที่เช็คว่าใน array มี element ไหนที่ผ่านเงื่อนไขบ้าง
     // ebook ไม่มี stock จริง จึงข้ามการเช็ค stock สำหรับ ebook
     const invalidVariant = variants.some(
       (v) =>
         !v.price || isNaN(Number(v.price)) ||
-        (v.type !== "ebook" && (!v.stock || isNaN(Number(v.stock))))
-    );
+        (v.type !== 'ebook' && (!v.stock || isNaN(Number(v.stock))))
+    )
     if (invalidVariant) {
-      setSubmitError("กรุณากรอกราคาและจำนวนสต็อกให้ครบในทุก Variant");
-      return;
+      setSubmitError('กรุณากรอกราคาและจำนวนสต็อกให้ครบในทุก Variant')
+      return
     }
 
-    // ห้าม variant type ซ้ำกัน
-    const types = variants.map((v) => v.type);
+    const types = variants.map((v) => v.type)
     if (new Set(types).size !== types.length) {
-      setSubmitError("ประเภทของ Variant ไม่สามารถซ้ำกันได้");
-      return;
+      setSubmitError('ประเภทของ Variant ไม่สามารถซ้ำกันได้')
+      return
     }
 
-    // สร้าง FormData ส่ง Backend
-    const data = new FormData();
-    data.append("title", form.title);
-    data.append("author", form.author);
-    data.append("publisher", form.publisher);
-    data.append("publish_year", form.publishYear);
-    data.append("genre", form.genre);
-    data.append("synopsis", form.synopsis);
-    // ส่ง stock เป็น null สำหรับ ebook — backend ต้องรองรับ null stock
+    const data = new FormData()
+    data.append('title', form.title)
+    data.append('author', form.author)
+    data.append('publisher', form.publisher)
+    data.append('publish_year', form.publishYear)
+    data.append('genre', form.genre)
+    data.append('synopsis', form.synopsis)
+    // ebook ส่ง stock: null เสมอ — backend รองรับ null stock สำหรับ ebook
     const variantsForApi = variants.map((v) => ({
       type:  v.type,
       price: Number(v.price),
-      stock: v.type === "ebook" ? null : Number(v.stock),
-    }));
-    data.append("variants", JSON.stringify(variantsForApi));
-    if (coverFile) data.append("cover_image", coverFile);
+      stock: v.type === 'ebook' ? null : Number(v.stock),
+    }))
+    data.append('variants', JSON.stringify(variantsForApi))
+    if (coverFile) data.append('cover_image', coverFile)
 
     try {
-      setIsSubmitting(true);
-      await createBook(data);
-      setSubmitSuccess(true);
-      setTimeout(() => navigate("/"), 2000);
+      setIsSubmitting(true)
+      await createBook(data)
+      setSubmitSuccess(true)
+      setTimeout(() => navigate('/'), 2000)
     } catch (err) {
-      setSubmitError(err.message);
+      setSubmitError(err.message)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   // ── UI ────────────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-bg-main py-10 px-4">
       <div className="max-w-3xl mx-auto">
@@ -186,7 +179,6 @@ export default function AddProductPage() {
               📖 ข้อมูลหลัก
             </h2>
 
-            {/* ชื่อหนังสือ */}
             <div>
               <FieldLabel required>ชื่อหนังสือ</FieldLabel>
               <input
@@ -201,7 +193,6 @@ export default function AddProductPage() {
               />
             </div>
 
-            {/* ชื่อผู้แต่ง + สำนักพิมพ์ (2 คอลัมน์) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <FieldLabel required>ชื่อผู้แต่ง</FieldLabel>
@@ -230,7 +221,6 @@ export default function AddProductPage() {
               </div>
             </div>
 
-            {/* ปีที่พิมพ์ + หมวดหมู่ (2 คอลัมน์) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <FieldLabel>ปีที่พิมพ์</FieldLabel>
@@ -258,15 +248,12 @@ export default function AddProductPage() {
                 >
                   <option value="" disabled>-- เลือกแนวนิยาย --</option>
                   {GENRES.map((g) => (
-                    <option key={g.value} value={g.value}>
-                      {g.label}
-                    </option>
+                    <option key={g.value} value={g.value}>{g.label}</option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* เรื่องย่อ / Synopsis */}
             <div>
               <FieldLabel>เรื่องย่อ / Synopsis</FieldLabel>
               <textarea
@@ -294,11 +281,7 @@ export default function AddProductPage() {
                 onClick={() => fileInputRef.current?.click()}
               >
                 {coverPreview ? (
-                  <img
-                    src={coverPreview}
-                    alt="Cover preview"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={coverPreview} alt="Cover preview" className="w-full h-full object-cover" />
                 ) : (
                   <div className="text-center px-2">
                     <svg className="w-8 h-8 text-text-muted mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -309,7 +292,6 @@ export default function AddProductPage() {
                 )}
               </div>
 
-              {/* Upload info */}
               <div className="flex-1 space-y-3">
                 <p className="text-sm text-text-muted leading-relaxed">
                   อัปโหลดภาพปกหนังสือ รองรับไฟล์ <strong>JPG, PNG, WebP</strong><br />
@@ -324,12 +306,10 @@ export default function AddProductPage() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
-                  {coverFile ? "เปลี่ยนรูปปก" : "เลือกรูปปก"}
+                  {coverFile ? 'เปลี่ยนรูปปก' : 'เลือกรูปปก'}
                 </button>
                 {coverFile && (
-                  <p className="text-xs text-text-muted">
-                    ✅ {coverFile.name}
-                  </p>
+                  <p className="text-xs text-text-muted">✅ {coverFile.name}</p>
                 )}
                 <input
                   ref={fileInputRef}
@@ -346,9 +326,7 @@ export default function AddProductPage() {
           {/* ── Section 3: Variants ── */}
           <section className="bg-white rounded-xl border border-border-color p-6 shadow-sm">
             <div className="flex items-center justify-between border-b border-border-color pb-3 mb-5">
-              <h2 className="font-serif text-lg text-text-main">
-                📦 ประเภทและราคา (Variants)
-              </h2>
+              <h2 className="font-serif text-lg text-text-main">📦 ประเภทและราคา (Variants)</h2>
               <button
                 type="button"
                 id="btn-add-variant"
@@ -369,7 +347,6 @@ export default function AddProductPage() {
                   key={index}
                   className="relative flex flex-col sm:flex-row gap-3 p-4 rounded-lg bg-bg-hero border border-border-color"
                 >
-                  {/* Badge ลำดับ */}
                   <span className="absolute -top-2.5 left-3 text-xs font-semibold text-white bg-brand px-2 py-0.5 rounded-full">
                     Variant {index + 1}
                   </span>
@@ -380,13 +357,11 @@ export default function AddProductPage() {
                     <select
                       id={`variant-type-${index}`}
                       value={variant.type}
-                      onChange={(e) => handleVariantChange(index, "type", e.target.value)}
+                      onChange={(e) => handleVariantChange(index, 'type', e.target.value)}
                       className={`${inputClass} cursor-pointer`}
                     >
                       {VARIANT_TYPES.map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
-                        </option>
+                        <option key={t.value} value={t.value}>{t.label}</option>
                       ))}
                     </select>
                   </div>
@@ -403,15 +378,15 @@ export default function AddProductPage() {
                         step="0.01"
                         placeholder="0.00"
                         value={variant.price}
-                        onChange={(e) => handleVariantChange(index, "price", e.target.value)}
+                        onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
                         className={`${inputClass} pl-7`}
                         required
                       />
                     </div>
                   </div>
 
-                  {/* สต็อก — ซ่อนสำหรับ ebook เพราะถือว่า stock ไม่จำกัด (∞) */}
-                  {variant.type !== "ebook" ? (
+                  {/* Stock — ebook ไม่มี stock จริง แสดง ∞ แทน */}
+                  {variant.type !== 'ebook' ? (
                     <div className="w-full sm:w-32">
                       <FieldLabel required>จำนวน (Stock)</FieldLabel>
                       <input
@@ -420,7 +395,7 @@ export default function AddProductPage() {
                         min="0"
                         placeholder="0"
                         value={variant.stock}
-                        onChange={(e) => handleVariantChange(index, "stock", e.target.value)}
+                        onChange={(e) => handleVariantChange(index, 'stock', e.target.value)}
                         className={inputClass}
                         required
                       />
@@ -434,7 +409,6 @@ export default function AddProductPage() {
                     </div>
                   )}
 
-                  {/* ปุ่มลบ */}
                   {variants.length > 1 && (
                     <button
                       type="button"
@@ -452,7 +426,7 @@ export default function AddProductPage() {
             </div>
           </section>
 
-          {/* ── Error / Success Feedback ── */}
+          {/* ── Feedback ── */}
           {submitError && (
             <div className="flex items-start gap-3 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
               <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -509,5 +483,5 @@ export default function AddProductPage() {
         </form>
       </div>
     </div>
-  );
+  )
 }

@@ -6,8 +6,11 @@ import App from './App.jsx'
 import './index.css'
 
 // จุดเริ่มต้นของแอปพลิเคชัน React
+
 createRoot(document.getElementById('root')).render(
+
   // StrictMode ช่วยเตือนโค้ดที่อาจมีปัญหา (แสดงผลเฉพาะตอน Development)
+
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>

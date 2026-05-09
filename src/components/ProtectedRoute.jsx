@@ -1,13 +1,8 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-/**
- * ProtectedRoute - คอมโพเนนต์สำหรับป้องกันการเข้าถึงหน้าเพจ
- * 
- * 
- * @param {children} - หน้าเพจที่ต้องการแสดงถ้าผ่านเงื่อนไข
- * @param {role} - ระดับสิทธิ์ที่ต้องการ (เช่น 'admin')
- */
+// Guard route — ตรวจสอบ login และ role ก่อนแสดง children
+// ถ้าไม่ผ่าน → redirect กลับหน้าหลัก
 const ProtectedRoute = ({ children, role }) => {
   const { isLoggedIn, user, isLoading } = useAuth()
 

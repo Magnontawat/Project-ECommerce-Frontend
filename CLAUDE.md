@@ -38,6 +38,18 @@ src/
 │   ├── HeroBanner.jsx    — Banner ด้านบนหน้า Home
 │   └── Footer.jsx        — ส่วนท้ายเว็บ
 │
+│   # — components ด้านล่างนี้เป็น legacy prototype จาก mock data phase
+│   # — ยังไม่ได้ import ใช้งานใน App.jsx หรือ page ใดๆ (orphaned)
+│   ├── CategoriesSection.jsx
+│   ├── Layout.jsx
+│   ├── MembershipBanner.jsx
+│   ├── ProductCard.jsx
+│   ├── ProductGallery.jsx
+│   ├── ProductInfo.jsx
+│   ├── ProductsGridSection.jsx
+│   ├── ShowcaseGrid.jsx
+│   └── SuggestionSection.jsx
+│
 ├── context/
 │   └── AuthContext.jsx   — Global auth state (AuthProvider + useAuth hook)
 │
@@ -49,7 +61,7 @@ src/
 │
 ├── pages/
 │   ├── HomePage.jsx            — หน้าหลัก (Recommended + Browse All + Pagination)
-│   ├── BookDetailPage.jsx      — รายละเอียดหนังสือ
+│   ├── BookDetailPage.jsx      — รายละเอียดหนังสือ (มีปุ่ม "เพิ่มในตะกร้า" แต่ยังไม่ได้เชื่อม API)
 │   ├── AddProductPage.jsx      — Admin: เพิ่มหนังสือใหม่ (Protected)
 │   ├── ManageProductsPage.jsx  — Admin: ตารางจัดการสินค้าทั้งหมด (Protected) รองรับ inline edit + delete พร้อม confirm
 │   ├── LoginPage.jsx           — หน้า Login แยก (ยังไม่ได้ใช้ใน route)
@@ -59,6 +71,7 @@ src/
 │   ├── api.js            — Axios instance + request interceptor (auto token) เท่านั้น
 │   ├── authService.js    — login / register / logout (เรียก API)
 │   └── bookService.js    — fetchBooks / fetchBookById / createBook / updateBook / deleteBook (admin only)
+│   # — cartService.js และ orderService.js ยังไม่ได้สร้าง (planned)
 │
 └── data/
     ├── mockData.js       — Mock books (8 เล่ม) สำหรับ dev ก่อนมี backend
@@ -193,6 +206,21 @@ npm run lint     # ตรวจสอบ code style
 - Frontend ส่ง `stock: null` ไปให้ backend **เสมอ** เมื่อ `type === "ebook"` (ทั้ง POST และ PUT)
 - **ไม่มี** stock input ใน UI สำหรับ ebook ทั้งใน AddProductPage และ ManageProductsPage
 - DB column `book_variants.stock` ต้องรองรับ `NULL` — ดู checklist ใน `spec_api/api.md`
+
+---
+
+## Frontend ที่ยังไม่ได้ implement (Planned)
+
+Backend API พร้อมแล้วทั้งหมด แต่ frontend ยังไม่ได้เชื่อมต่อ:
+
+| ฟีเจอร์ | API ที่ต้องใช้ | สิ่งที่ต้องสร้าง |
+|--------|-------------|----------------|
+| Cart UI | GET/DELETE/PUT `/api/cart*` | `cartService.js` + CartPage + เชื่อมปุ่มใน BookDetailPage |
+| Checkout | POST `/api/orders` | ขั้นตอนยืนยันและชำระเงิน |
+| Order History | GET `/api/orders`, GET `/api/orders/:id` | `orderService.js` + OrderHistoryPage |
+| Wishlist / Favorites | — | ปุ่มมีใน BookDetailPage แต่ยังไม่มี logic ใดๆ |
+
+ปุ่ม "เพิ่มในตะกร้า" และ "บันทึกในรายการโปรด" ใน `BookDetailPage` มี UI แล้วแต่ยังไม่มี `onClick` handler ที่เรียก API
 
 ---
 

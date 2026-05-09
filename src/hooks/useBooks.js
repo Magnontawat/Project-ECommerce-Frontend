@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchBooks } from '../services/bookService'
 
-/**
- * useBooks — Custom hook สำหรับดึงข้อมูลรายชื่อหนังสือทั้งหมดจาก Backend
- */
+// Custom hook สำหรับดึงข้อมูลหนังสือทั้งหมดจาก Backend
 export function useBooks() {
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
