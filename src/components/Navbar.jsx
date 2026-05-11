@@ -6,14 +6,14 @@ import { useAuth } from '../context/AuthContext'
 // Dropdown แยกตาม role: admin = เมนูจัดการ, user = Profile + Logout
 function UserDropdown({ user, logout }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef(null)
+  const ref = useRef(null) //DOM reference for click outside detection
   const navigate = useNavigate()
   const isAdmin = user?.role === 'admin'
 
   // ปิด dropdown เมื่อคลิกนอกพื้นที่
   useEffect(() => {
     function handleClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false) 
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -28,22 +28,24 @@ function UserDropdown({ user, logout }) {
 
   return (
     <div className="relative flex items-center gap-4" ref={ref}>
-      {/* ไอคอนตะกร้า */}
-      <Link
-        to="/cart"
-        className="flex items-center gap-1.5 text-text-muted hover:text-text-main transition-colors group"
-        aria-label="Shopping cart"
-      >
-        <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.8}
-            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M9 21a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2z"
-          />
-        </svg>
-        <span className="text-[0.85rem] font-medium hidden lg:inline">รถเข็น</span>
-      </Link>
+      {/* ไอคอนตะกร้า — แสดงเฉพาะ role: user เท่านั้น */}
+      {!isAdmin && (
+        <Link
+          to="/cart"
+          className="flex items-center gap-1.5 text-text-muted hover:text-text-main transition-colors group"
+          aria-label="Shopping cart"
+        >
+          <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.8}
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M9 21a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2z"
+            />
+          </svg>
+          <span className="text-[0.85rem] font-medium hidden lg:inline">รถเข็น</span>
+        </Link>
+      )}
 
       {/* ปุ่ม Avatar + ชื่อผู้ใช้ */}
       <button
@@ -253,16 +255,19 @@ export default function Navbar() {
                     </span>
                   </div>
 
-                  <Link
-                    to="/cart"
-                    className="text-left text-text-main py-2 flex items-center gap-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M9 21a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2z" />
-                    </svg>
-                    รถเข็น
-                  </Link>
+                  {/* รถเข็น — แสดงเฉพาะ role: user เท่านั้น */}
+                  {!isAdmin && (
+                    <Link
+                      to="/cart"
+                      className="text-left text-text-main py-2 flex items-center gap-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M9 21a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2z" />
+                      </svg>
+                      รถเข็น
+                    </Link>
+                  )}
 
                   {isAdmin ? (
                     // ── Mobile Admin ──

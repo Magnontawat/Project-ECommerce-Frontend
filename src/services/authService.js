@@ -13,7 +13,7 @@ export async function loginUser({ email, password }) {
         level: response.data.level
       },
       token: response.data.token,
-    }
+    } 
   } catch (error) {
     const message = error.response?.data?.message || 'Login failed. Please check your credentials.'
     throw new Error(message)
@@ -23,7 +23,7 @@ export async function loginUser({ email, password }) {
 // Register User — POST /api/auth/register
 export async function registerUser({ email, username, password }) {
   try {
-    const response = await api.post('/auth/register', { email, username, password })
+    const response = await api.post('/auth/register', { email, username, password }) //<--- axios ทำการแปลงเป็น JSON แล้วใส่ใน body ของ request ให้อัตโนมัติ
     // Expecting: { id, email, username, role, level, token }
     return {
       user: {

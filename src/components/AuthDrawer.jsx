@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, ArrowRight, Loader2, ShieldCheck, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
-const MIN_PASSWORD_LENGTH = 5
+const MIN_PASSWORD_LENGTH = 6
 
 export default function AuthDrawer() {
   const {
@@ -72,19 +72,15 @@ export default function AuthDrawer() {
     if (authMode === 'login') {
       result = await login({ email: form.email, password: form.password })
     } else {
-      result = await register({
-        username: form.username,
-        email: form.email,
-        password: form.password
-      })
-    }
+      result = await register({username: form.username, email: form.email, password: form.password})
+    } 
 
     if (result.success) {
       closeAuthDrawer()
     }
   }
 
-  if (!isAuthDrawerOpen) return null
+  if (!isAuthDrawerOpen) return null //ไม่ทำการ return ใดๆออกไป = state ของ drawer คือปิดอยู่
 
   return (
     <div className="fixed inset-0 z-[100] flex justify-end">

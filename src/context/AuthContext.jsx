@@ -32,8 +32,8 @@ export function AuthProvider({ children }) {
 
   // ── Login ──────────────────────────────────────────────────────────────────
   const login = useCallback(async ({ email, password }) => {
-    setIsLoading(true)
-    setError(null)
+      setIsLoading(true)
+      setError(null)
     try {
       const { user: loggedInUser, token } = await loginUser({ email, password })
       setUser(loggedInUser)

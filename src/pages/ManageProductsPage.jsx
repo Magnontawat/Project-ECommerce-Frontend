@@ -130,7 +130,6 @@ function BookRow({
 
   // เมื่อเข้าโหมดแก้ไข → copy ข้อมูลจาก book มาเป็น form state
   // ทำแบบนี้เพื่อให้แก้ไขได้โดยไม่กระทบ book object เดิม
-  
   useEffect(() => {
     if (isEditing) {
       setForm({
@@ -198,7 +197,12 @@ function BookRow({
   }
 
   // ── โหมดแก้ไข ─────────────────────────────────────────────────────────────
-  if (isEditing && form) {
+  // แยกออกมาเป็น function เพื่อให้อ่าน flow ของ BookRow ได้จาก top ลงล่าง
+  const renderEditingMode = () => {
+    // คำนวณ type ที่ยังเพิ่มได้ เพื่อแสดงปุ่ม "+ TH / EN / E-Book"
+    const existingTypes = form.variants.map((v) => v.type)
+    const addableTypes = ["th", "en", "ebook"].filter((t) => !existingTypes.includes(t))
+
     return (
       <tr className="border-b border-border-color bg-amber-50/50">
         {/* รูปปก — ไม่รองรับเปลี่ยนใน inline edit */}
@@ -295,31 +299,26 @@ function BookRow({
             })}
 
             {/* ปุ่มเพิ่ม variant — แสดงเฉพาะประเภทที่ยังไม่มีในรายการ */}
-            {(() => {
-              const existingTypes = form.variants.map((v) => v.type)
-              const addableTypes = ["th", "en", "ebook"].filter((t) => !existingTypes.includes(t))
-              if (addableTypes.length === 0) return null
-              return (
-                <div className="flex gap-1.5 mt-0.5">
-                  {addableTypes.map((type) => {
-                    const badge = VARIANT_BADGE[type]
-                    return (
-                      <button
-                        key={type}
-                        onClick={() => handleAddVariant(type)}
-                        title={`เพิ่ม variant ${badge.label}`}
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border border-dashed opacity-60 hover:opacity-100 transition-opacity ${badge.bg}`}
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        {badge.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              )
-            })()}
+            {addableTypes.length > 0 && (
+              <div className="flex gap-1.5 mt-0.5">
+                {addableTypes.map((type) => {
+                  const badge = VARIANT_BADGE[type]
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => handleAddVariant(type)}
+                      title={`เพิ่ม variant ${badge.label}`}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border border-dashed opacity-60 hover:opacity-100 transition-opacity ${badge.bg}`}
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      {badge.label}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </td>
 
@@ -358,135 +357,142 @@ function BookRow({
   }
 
   // ── โหมดปกติ (display) ────────────────────────────────────────────────────
-  const lowestPrice = book.variants?.length
-    ? Math.min(...book.variants.map((v) => parseFloat(v.price)))
-    : null
+  // แยกออกมาเป็น function คู่กับ renderEditingMode เพื่อให้อ่าน flow ได้ชัดเจน
+  const renderDisplayMode = () => {
+    const lowestPrice = book.variants?.length
+      ? Math.min(...book.variants.map((v) => parseFloat(v.price)))
+      : null
 
-  return (
-    <tr className={`border-b border-border-color transition-colors ${confirmingDelete ? "bg-red-50/40" : "hover:bg-bg-hero"}`}>
-      {/* รูปปก */}
-      <td className="px-4 py-3">
-        {book.cover_image_url
-          ? <img src={book.cover_image_url} alt={`ปก ${book.title}`} className="w-10 h-14 object-cover rounded shadow-sm" />
-          : <CoverPlaceholder />
-        }
-      </td>
+    return (
+      <tr className={`border-b border-border-color transition-colors ${confirmingDelete ? "bg-red-50/40" : "hover:bg-bg-hero"}`}>
+        {/* รูปปก */}
+        <td className="px-4 py-3">
+          {book.cover_image_url
+            ? <img src={book.cover_image_url} alt={`ปก ${book.title}`} className="w-10 h-14 object-cover rounded shadow-sm" />
+            : <CoverPlaceholder />
+          }
+        </td>
 
-      {/* ชื่อหนังสือ + ปีที่พิมพ์ */}
-      <td className="px-4 py-3">
-        <p className="font-medium text-text-main leading-snug line-clamp-2 max-w-[200px]">
-          {book.title}
-        </p>
-        {book.publish_year && (
-          <p className="text-xs text-text-muted mt-0.5">{book.publish_year}</p>
-        )}
-      </td>
+        {/* ชื่อหนังสือ + ปีที่พิมพ์ */}
+        <td className="px-4 py-3">
+          <p className="font-medium text-text-main leading-snug line-clamp-2 max-w-[200px]">
+            {book.title}
+          </p>
+          {book.publish_year && (
+            <p className="text-xs text-text-muted mt-0.5">{book.publish_year}</p>
+          )}
+        </td>
 
-      {/* ผู้แต่ง */}
-      <td className="px-4 py-3 text-text-muted whitespace-nowrap">
-        {book.author}
-      </td>
+        {/* ผู้แต่ง */}
+        <td className="px-4 py-3 text-text-muted whitespace-nowrap">
+          {book.author}
+        </td>
 
-      {/* หมวดหมู่ */}
-      <td className="px-4 py-3">
-        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-          {GENRE_LABEL[book.genre] ?? book.genre}
-        </span>
-      </td>
+        {/* หมวดหมู่ */}
+        <td className="px-4 py-3">
+          <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+            {GENRE_LABEL[book.genre] ?? book.genre}
+          </span>
+        </td>
 
-      {/* Variants */}
-      <td className="px-4 py-3">
-        <div className="flex flex-wrap gap-1.5">
-          {book.variants?.map((v) => {
-            const badge = VARIANT_BADGE[v.type] ?? { label: v.type, bg: "bg-gray-100 text-gray-600" }
-            const stockDisplay = v.type === "ebook" ? "∞" : v.stock
-            return (
-              <span
-                key={v.id}
-                title={`Stock: ${stockDisplay}`}
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${badge.bg}`}
-              >
-                {badge.label}
-                <span className="opacity-70">฿{parseFloat(v.price).toLocaleString()}</span>
-                <span className="opacity-50">({stockDisplay})</span>
-              </span>
-            )
-          })}
-        </div>
-        {lowestPrice !== null && (
-          <p className="text-xs text-text-muted mt-1">เริ่มต้น ฿{lowestPrice.toLocaleString()}</p>
-        )}
-      </td>
-
-      {/* ปุ่มจัดการ */}
-      <td className="px-4 py-3">
-        {confirmingDelete ? (
-          // ── โหมดยืนยันการลบ ───────────────────────────────────────────────
-          <div className="flex flex-col items-end gap-1.5">
-            <p className="text-xs text-red-600 font-medium whitespace-nowrap">
-              ยืนยันลบหนังสือเล่มนี้?
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={onDeleteConfirm}
-                disabled={isDeleting}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-red-500 rounded-md hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-              >
-                {isDeleting ? <SpinnerIcon /> : null}
-                {isDeleting ? "กำลังลบ..." : "ยืนยันลบ"}
-              </button>
-              <button
-                onClick={onDeleteCancel}
-                disabled={isDeleting}
-                className="px-3 py-1.5 text-xs font-medium text-text-muted border border-border-color rounded-md hover:bg-gray-100 disabled:opacity-50 transition-colors"
-              >
-                ยกเลิก
-              </button>
-            </div>
-            {status?.type === "error" && (
-              <p className="text-xs text-red-600">{status.message}</p>
-            )}
+        {/* Variants */}
+        <td className="px-4 py-3">
+          <div className="flex flex-wrap gap-1.5">
+            {book.variants?.map((v) => {
+              const badge = VARIANT_BADGE[v.type] ?? { label: v.type, bg: "bg-gray-100 text-gray-600" }
+              const stockDisplay = v.type === "ebook" ? "∞" : v.stock
+              return (
+                <span
+                  key={v.id}
+                  title={`Stock: ${stockDisplay}`}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${badge.bg}`}
+                >
+                  {badge.label}
+                  <span className="opacity-70">฿{parseFloat(v.price).toLocaleString()}</span>
+                  <span className="opacity-50">({stockDisplay})</span>
+                </span>
+              )
+            })}
           </div>
-        ) : (
-          // ── โหมดปกติ — ปุ่ม แก้ไข / ลบ ──────────────────────────────────
-          <div className="flex flex-col items-end gap-1.5">
-            <div className="flex gap-2">
-              <button
-                onClick={() => onEditStart(book.id)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-main border border-border-color rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5
-                       m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-                แก้ไข
-              </button>
-              <button
-                onClick={() => onDeleteRequest(book.id)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-500 border border-red-200 rounded-md hover:bg-red-50 transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7
-                       m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-                ลบ
-              </button>
-            </div>
-            {/* สถานะหลังบันทึก — แสดงชั่วคราว 3 วินาที */}
-            {status && (
-              <p className={`text-xs ${status.type === "success" ? "text-green-600" : "text-red-600"}`}>
-                {status.type === "success" ? "✓ " : ""}{status.message}
+          {lowestPrice !== null && (
+            <p className="text-xs text-text-muted mt-1">เริ่มต้น ฿{lowestPrice.toLocaleString()}</p>
+          )}
+        </td>
+
+        {/* ปุ่มจัดการ */}
+        <td className="px-4 py-3">
+          {confirmingDelete ? (
+            // ── โหมดยืนยันการลบ ───────────────────────────────────────────────
+            <div className="flex flex-col items-end gap-1.5">
+              <p className="text-xs text-red-600 font-medium whitespace-nowrap">
+                ยืนยันลบหนังสือเล่มนี้?
               </p>
-            )}
-          </div>
-        )}
-      </td>
-    </tr>
-  )
+              <div className="flex gap-2">
+                <button
+                  onClick={onDeleteConfirm}
+                  disabled={isDeleting}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-red-500 rounded-md hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isDeleting ? <SpinnerIcon /> : null}
+                  {isDeleting ? "กำลังลบ..." : "ยืนยันลบ"}
+                </button>
+                <button
+                  onClick={onDeleteCancel}
+                  disabled={isDeleting}
+                  className="px-3 py-1.5 text-xs font-medium text-text-muted border border-border-color rounded-md hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                >
+                  ยกเลิก
+                </button>
+              </div>
+              {status?.type === "error" && (
+                <p className="text-xs text-red-600">{status.message}</p>
+              )}
+            </div>
+          ) : (
+            // ── โหมดปกติ — ปุ่ม แก้ไข / ลบ ──────────────────────────────────
+            <div className="flex flex-col items-end gap-1.5">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onEditStart(book.id)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-main border border-border-color rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5
+                         m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                  แก้ไข
+                </button>
+                <button
+                  onClick={() => onDeleteRequest(book.id)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-500 border border-red-200 rounded-md hover:bg-red-50 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7
+                         m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                  ลบ
+                </button>
+              </div>
+              {/* สถานะหลังบันทึก — แสดงชั่วคราว 10 วินาที */}
+              {status && (
+                <p className={`text-xs ${status.type === "success" ? "text-green-600" : "text-red-600"}`}>
+                  {status.type === "success" ? "✓ " : ""}{status.message}
+                </p>
+              )}
+            </div>
+          )}
+        </td>
+      </tr>
+    )
+  }
+
+  // เลือก render ตามโหมดปัจจุบัน — อ่าน flow ได้จาก top ลงล่างโดยไม่ต้องสะดุด
+  if (isEditing && form) return renderEditingMode()
+  return renderDisplayMode()
 }
 
 // ── SpinnerIcon — ไอคอน loading เล็กๆ ────────────────────────────────────────
@@ -506,15 +512,15 @@ export default function ManageProductsPage() {
   const navigate = useNavigate()
 
   // ── ข้อมูลหนังสือจาก API ────────────────────────────────────────────────
-  const [books, setBooks]       = useState([])
+  const [books, setBooks]         = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [fetchError, setFetchError] = useState(null)
 
   // ── สถานะของแต่ละแถว ────────────────────────────────────────────────────
-  const [editingId, setEditingId]           = useState(null) // id ที่กำลัง edit
-  const [savingId, setSavingId]             = useState(null) // id ที่กำลัง save
+  const [editingId, setEditingId]             = useState(null) // id ที่กำลัง edit
+  const [savingId, setSavingId]               = useState(null) // id ที่กำลัง save
   const [confirmDeleteId, setConfirmDeleteId] = useState(null) // id รอยืนยันลบ
-  const [deletingId, setDeletingId]         = useState(null) // id ที่กำลังลบ
+  const [deletingId, setDeletingId]           = useState(null) // id ที่กำลังลบ
   // rowStatus: { [bookId]: { type: 'success' | 'error', message: string } }
   const [rowStatus, setRowStatus] = useState({})
 
@@ -533,7 +539,7 @@ export default function ManageProductsPage() {
     loadBooks()
   }, [])
 
-  // ── ตั้งสถานะ row พร้อมล้างอัตโนมัติหลัง 3 วินาที ─────────────────────
+  // ── function ตั้งสถานะ row พร้อมล้างอัตโนมัติหลัง 10 วินาที ─────────────────────
   const setRowStatusTimed = (bookId, type, message) => {
     setRowStatus((prev) => ({ ...prev, [bookId]: { type, message } }))
     setTimeout(() => {
@@ -542,7 +548,19 @@ export default function ManageProductsPage() {
         delete next[bookId]
         return next
       })
-    }, 3000)
+    }, 10000) //ตั้งเวลาโชว์สถานะเป็น 10 วินาที เพราะบางครั้ง error message อาจยาวและต้องให้เวลาอ่าน
+  }
+
+  // ── Handler: เปิดโหมดแก้ไข ──────────────────────────────────────────────
+  const handleEditStart = (id) => {
+    setConfirmDeleteId(null) // ปิด confirm delete หากเปิดอยู่
+    setEditingId(id)
+  }
+
+  // ── Handler: เปิดโหมดยืนยันลบ ──────────────────────────────────────────
+  const handleDeleteRequest = (id) => {
+    setEditingId(null) // ปิด edit mode หากเปิดอยู่
+    setConfirmDeleteId(id)
   }
 
   // ── Handler: บันทึกการแก้ไข ──────────────────────────────────────────────
@@ -570,6 +588,7 @@ export default function ManageProductsPage() {
     try {
       await deleteBook(bookId)
       // ลบออกจาก state — แถวจะหายไปจากตารางทันที
+      // เป็นการ soft delete ปรับ active=false ใน backend แต่ frontend จะไม่แสดงหนังสือที่ active=false อยู่แล้ว จึงเหมือนลบออกไปเลย เพื่อเก็บไว้ทำ history ในอนาคตถ้าต้องการ
       setBooks((prev) => prev.filter((b) => b.id !== bookId))
       setConfirmDeleteId(null)
     } catch (err) {
@@ -690,16 +709,10 @@ export default function ManageProductsPage() {
                     status={rowStatus[book.id] ?? null}
                     isSaving={savingId === book.id}
                     isDeleting={deletingId === book.id}
-                    onEditStart={(id) => {
-                      setConfirmDeleteId(null) // ปิด confirm delete หากเปิดอยู่
-                      setEditingId(id)
-                    }}
+                    onEditStart={handleEditStart}
                     onSave={handleSave}
                     onCancel={() => setEditingId(null)}
-                    onDeleteRequest={(id) => {
-                      setEditingId(null) // ปิด edit mode หากเปิดอยู่
-                      setConfirmDeleteId(id)
-                    }}
+                    onDeleteRequest={handleDeleteRequest}
                     onDeleteConfirm={() => handleDeleteConfirm(book.id)}
                     onDeleteCancel={() => setConfirmDeleteId(null)}
                   />
