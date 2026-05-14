@@ -104,6 +104,7 @@ export default function AddProductPage() {
     e.preventDefault()
     setSubmitError(null)
 
+    // เช็คว่ามีข้อมูลที่จำเป็นไหม
     if (!form.title || !form.author || !form.genre) {
       setSubmitError('กรุณากรอกข้อมูลที่จำเป็น: ชื่อหนังสือ, ชื่อผู้แต่ง และหมวดหมู่')
       return
