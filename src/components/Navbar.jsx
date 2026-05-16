@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 
 // ── UserDropdown ───────────────────────────────────────────────────────────────
 // Dropdown แยกตาม role: admin = เมนูจัดการ, user = Profile + Logout
@@ -9,6 +10,7 @@ function UserDropdown({ user, logout }) {
   const ref = useRef(null) //DOM reference for click outside detection
   const navigate = useNavigate()
   const isAdmin = user?.role === 'admin'
+  const { itemCount, openCart } = useCart()
 
   // ปิด dropdown เมื่อคลิกนอกพื้นที่
   useEffect(() => {
@@ -28,11 +30,11 @@ function UserDropdown({ user, logout }) {
 
   return (
     <div className="relative flex items-center gap-4" ref={ref}>
-      {/* ไอคอนตะกร้า — แสดงเฉพาะ role: user เท่านั้น */}
+      {/* ไอคอนตะกร้า — แสดงเฉพาะ role: user, เปิด CartDrawer แทนการนำทาง */}
       {!isAdmin && (
-        <Link
-          to="/cart"
-          className="flex items-center gap-1.5 text-text-muted hover:text-text-main transition-colors group"
+        <button
+          onClick={openCart}
+          className="relative flex items-center gap-1.5 text-text-muted hover:text-text-main transition-colors group"
           aria-label="Shopping cart"
         >
           <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,8 +45,13 @@ function UserDropdown({ user, logout }) {
               d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M9 21a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2z"
             />
           </svg>
-          <span className="text-[0.85rem] font-medium hidden lg:inline">รถเข็น</span>
-        </Link>
+          {/* Badge แสดงจำนวน item ในตะกร้า */}
+          {itemCount > 0 && (
+            <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-0.5 rounded-full bg-red-500 text-white text-[0.6rem] font-bold flex items-center justify-center leading-none shadow-sm ring-2 ring-white">
+              {itemCount > 99 ? '99+' : itemCount}
+            </span>
+          )}
+        </button>
       )}
 
       {/* ปุ่ม Avatar + ชื่อผู้ใช้ */}
@@ -107,6 +114,17 @@ function UserDropdown({ user, logout }) {
                 </svg>
                 จัดการสินค้า
               </button>
+              <button
+                id="navbar-dropdown-admin-orders"
+                role="menuitem"
+                onClick={() => { setOpen(false); navigate('/admin/orders') }}
+                className="w-full text-left px-4 py-2.5 text-[0.875rem] text-text-main hover:bg-gray-50 flex items-center gap-2.5 transition-colors"
+              >
+                <svg className="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 7h6m-6 4h4" />
+                </svg>
+                จัดการ Order
+              </button>
               <div className="border-t border-border-color my-1" />
               <button
                 id="navbar-dropdown-logout-admin"
@@ -123,6 +141,17 @@ function UserDropdown({ user, logout }) {
           ) : (
             // ── User Menu ──
             <>
+              <button
+                id="navbar-dropdown-orders"
+                role="menuitem"
+                onClick={() => { setOpen(false); navigate('/orders') }}
+                className="w-full text-left px-4 py-2.5 text-[0.875rem] text-text-main hover:bg-gray-50 flex items-center gap-2.5 transition-colors"
+              >
+                <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                ประวัติการสั่งซื้อ
+              </button>
               <button
                 id="navbar-dropdown-profile"
                 role="menuitem"
@@ -157,6 +186,7 @@ function UserDropdown({ user, logout }) {
 // ── Navbar ─────────────────────────────────────────────────────────────────────
 export default function Navbar() {
   const { user, isLoggedIn, logout, openLogin, openRegister } = useAuth()
+  const { itemCount, openCart } = useCart()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const navigate = useNavigate()
   const isAdmin = user?.role === 'admin'
@@ -255,18 +285,22 @@ export default function Navbar() {
                     </span>
                   </div>
 
-                  {/* รถเข็น — แสดงเฉพาะ role: user เท่านั้น */}
+                  {/* รถเข็น — เปิด CartDrawer แทนการนำทาง */}
                   {!isAdmin && (
-                    <Link
-                      to="/cart"
+                    <button
                       className="text-left text-text-main py-2 flex items-center gap-2"
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={() => { setIsMenuOpen(false); openCart() }}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M9 21a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2z" />
                       </svg>
-                      รถเข็น
-                    </Link>
+                      ตะกร้าสินค้า
+                      {itemCount > 0 && (
+                        <span className="ml-auto min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[0.65rem] font-bold flex items-center justify-center shadow-sm">
+                          {itemCount > 99 ? '99+' : itemCount}
+                        </span>
+                      )}
+                    </button>
                   )}
 
                   {isAdmin ? (
@@ -290,18 +324,38 @@ export default function Navbar() {
                         </svg>
                         จัดการสินค้า
                       </button>
+                      <button
+                        className="text-left text-text-main py-2 flex items-center gap-2"
+                        onClick={() => { setIsMenuOpen(false); navigate('/admin/orders') }}
+                      >
+                        <svg className="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 7h6m-6 4h4" />
+                        </svg>
+                        จัดการ Order
+                      </button>
                     </>
                   ) : (
                     // ── Mobile User ──
-                    <button
-                      className="text-left text-text-main py-2 flex items-center gap-2"
-                      onClick={() => { setIsMenuOpen(false); navigate('/profile') }}
-                    >
-                      <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A8.966 8.966 0 0112 15c2.21 0 4.23.798 5.879 2.113M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      โปรไฟล์
-                    </button>
+                    <>
+                      <button
+                        className="text-left text-text-main py-2 flex items-center gap-2"
+                        onClick={() => { setIsMenuOpen(false); navigate('/orders') }}
+                      >
+                        <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        ประวัติการสั่งซื้อ
+                      </button>
+                      <button
+                        className="text-left text-text-main py-2 flex items-center gap-2"
+                        onClick={() => { setIsMenuOpen(false); navigate('/profile') }}
+                      >
+                        <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A8.966 8.966 0 0112 15c2.21 0 4.23.798 5.879 2.113M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        โปรไฟล์
+                      </button>
+                    </>
                   )}
 
                   <button

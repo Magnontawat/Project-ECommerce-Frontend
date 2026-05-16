@@ -1,19 +1,27 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart, Loader2 } from 'lucide-react'
 import { fetchBookById } from '../services/bookService'
+import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 
-// ลำดับและ label ของ variant ที่แสดงเสมอ (แม้ไม่มีใน book จะ disabled)
+import { VARIANT_LABELS } from '../data/constants'
+
+// ลำดับของ variant ที่แสดงเสมอ (แม้ไม่มีใน book จะ disabled)
 const VARIANT_ORDER = ['th', 'en', 'ebook']
-const VARIANT_LABELS = { th: 'THAI', en: 'ENGLISH', ebook: 'EBOOK' }
 
 export default function BookDetailPage() {
   const { id } = useParams()
+  const { isLoggedIn, openLogin } = useAuth()
+  const { addToCart, openCart } = useCart()
+
   const [book, setBook] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedType, setSelectedType] = useState(null)
   const [quantity, setQuantity] = useState(1)
+  // null | 'loading' | 'success' | 'error' — feedback ปุ่มเพิ่มในตะกร้า
+  const [addStatus, setAddStatus] = useState(null)
 
   useEffect(() => {
     const getBook = async () => {
@@ -68,6 +76,27 @@ export default function BookDetailPage() {
 
   const handleQuantityChange = (delta) => {
     setQuantity(prev => Math.max(1, prev + delta))
+  }
+
+  const handleAddToCart = async () => {
+    // ยังไม่ได้ login → เปิด AuthDrawer โดยไม่เปลี่ยนหน้า
+    if (!isLoggedIn) {
+      openLogin()
+      return
+    }
+    //check ว่า selectedVariant มีค่าไหม (กรณี book ไม่มี variants เลย หรือยังไม่โหลดข้อมูล) เพื่อป้องกัน error
+    if (!selectedVariant) return
+    setAddStatus('loading')
+    const result = await addToCart({ variantId: selectedVariant.id, quantity })
+    if (result.success) {
+      setAddStatus('success')
+      openCart() // เปิด drawer ให้ user เห็นว่าสินค้าเข้าตะกร้าแล้ว
+      // reset feedback หลัง 2 วินาที
+      setTimeout(() => setAddStatus(null), 2000)
+    } else {
+      setAddStatus('error')
+      setTimeout(() => setAddStatus(null), 3000)
+    }
   }
 
   return (
@@ -173,10 +202,29 @@ export default function BookDetailPage() {
               </div>
             )}
 
-            {/* เพิ่มในตะกร้า — UI เท่านั้น ยังไม่มี handler (รอสร้างระบบตะกร้า) */}
-            <button className="flex items-center justify-center gap-3 w-full py-4 bg-brand text-white font-sans text-[0.9rem] hover:bg-brand-hover transition-colors mt-auto">
-              <ShoppingCart size={18} />
-              เพิ่มในตะกร้า
+            {/* เพิ่มในตะกร้า */}
+            <button
+              onClick={handleAddToCart}
+              disabled={addStatus === 'loading' || !selectedVariant}
+              className={[
+                'flex items-center justify-center gap-3 w-full py-4 font-sans text-[0.9rem] transition-colors mt-auto',
+                addStatus === 'success'
+                  ? 'bg-green-600 text-white'
+                  : addStatus === 'error'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-brand text-white hover:bg-brand-hover',
+                (addStatus === 'loading' || !selectedVariant) ? 'opacity-60 cursor-not-allowed' : '',
+              ].join(' ')}
+            >
+              {addStatus === 'loading' ? (
+                <><Loader2 size={18} className="animate-spin" /> กำลังเพิ่ม...</>
+              ) : addStatus === 'success' ? (
+                <>✓ เพิ่มลงตะกร้าแล้ว</>
+              ) : addStatus === 'error' ? (
+                <>เกิดข้อผิดพลาด ลองใหม่</>
+              ) : (
+                <><ShoppingCart size={18} /> เพิ่มในตะกร้า</>
+              )}
             </button>
 
           </div>

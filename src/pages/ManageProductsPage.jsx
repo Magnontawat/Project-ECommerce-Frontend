@@ -2,11 +2,10 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { fetchBooks, updateBook, deleteBook } from "../services/bookService"
 import BookRow from "../components/admin/BookRow"
+import BookCardMobile from "../components/admin/BookCardMobile"
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ── SkeletonRow — แถว placeholder ขณะโหลดข้อมูล ─────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────
+// ── SkeletonRow — placeholder สำหรับ desktop table ───────────────────────────
 function SkeletonRow() {
   return (
     <tr className="border-b border-border-color animate-pulse">
@@ -35,27 +34,64 @@ function SkeletonRow() {
   )
 }
 
+// ── SkeletonCard — placeholder สำหรับ mobile cards ───────────────────────────
+function SkeletonCard() {
+  return (
+    <div className="bg-white border border-border-color rounded-xl overflow-hidden animate-pulse">
+      <div className="flex gap-3 p-4">
+        <div className="w-14 h-20 rounded bg-gray-200 flex-shrink-0" />
+        <div className="flex-1 space-y-2 py-1">
+          <div className="h-4 bg-gray-200 rounded w-3/4" />
+          <div className="h-3 bg-gray-100 rounded w-1/2" />
+          <div className="h-5 bg-gray-200 rounded-full w-16 mt-2" />
+          <div className="flex gap-1 mt-2">
+            <div className="h-5 bg-gray-200 rounded-full w-20" />
+            <div className="h-5 bg-gray-100 rounded-full w-16" />
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border-color px-4 py-3 flex gap-2">
+        <div className="h-10 flex-1 bg-gray-200 rounded-lg" />
+        <div className="h-10 flex-1 bg-gray-100 rounded-lg" />
+      </div>
+    </div>
+  )
+}
+
+// ── EmptyState — ไม่มีหนังสือในระบบ ──────────────────────────────────────────
+function EmptyState() {
+  return (
+    <div className="text-center py-16 text-text-muted">
+      <svg className="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13
+             C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253
+             m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13
+             C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+        />
+      </svg>
+      ยังไม่มีหนังสือในระบบ
+    </div>
+  )
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ── ManageProductsPage — หน้าหลัก ────────────────────────────────────────────
+// ManageProductsPage — หน้าหลัก
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ManageProductsPage() {
   const navigate = useNavigate()
 
-  // ── ข้อมูลหนังสือจาก API ────────────────────────────────────────────────
   const [books, setBooks]           = useState([])
   const [isLoading, setIsLoading]   = useState(true)
   const [fetchError, setFetchError] = useState(null)
 
-  // ── สถานะของแต่ละแถว ────────────────────────────────────────────────────
-  const [editingId, setEditingId]             = useState(null) // id ที่กำลัง edit
-  const [savingId, setSavingId]               = useState(null) // id ที่กำลัง save
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null) // id รอยืนยันลบ
-  const [deletingId, setDeletingId]           = useState(null) // id ที่กำลังลบ
-  // rowStatus: { [bookId]: { type: 'success' | 'error', message: string } }
-  const [rowStatus, setRowStatus] = useState({})
+  const [editingId, setEditingId]             = useState(null)
+  const [savingId, setSavingId]               = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [deletingId, setDeletingId]           = useState(null)
+  const [rowStatus, setRowStatus]             = useState({})
 
-  // ── โหลดข้อมูลครั้งแรกเมื่อเปิดหน้า ────────────────────────────────────
   useEffect(() => {
     async function loadBooks() {
       try {
@@ -70,7 +106,6 @@ export default function ManageProductsPage() {
     loadBooks()
   }, [])
 
-  // ── ตั้งสถานะ row พร้อมล้างอัตโนมัติหลัง 10 วินาที ──────────────────────
   const setRowStatusTimed = (bookId, type, message) => {
     setRowStatus((prev) => ({ ...prev, [bookId]: { type, message } }))
     setTimeout(() => {
@@ -79,47 +114,37 @@ export default function ManageProductsPage() {
         delete next[bookId]
         return next
       })
-    }, 10000) //ตั้งเวลาโชว์สถานะเป็น 10 วินาที เพราะบางครั้ง error message อาจยาวและต้องให้เวลาอ่าน
+    }, 10000)
   }
 
-  // ── Handler: เปิดโหมดแก้ไข ──────────────────────────────────────────────
   const handleEditStart = (id) => {
-    setConfirmDeleteId(null) // ปิด confirm delete หากเปิดอยู่
+    setConfirmDeleteId(null)
     setEditingId(id)
   }
 
-  // ── Handler: เปิดโหมดยืนยันลบ ──────────────────────────────────────────
   const handleDeleteRequest = (id) => {
-    setEditingId(null) // ปิด edit mode หากเปิดอยู่
+    setEditingId(null)
     setConfirmDeleteId(id)
   }
 
-  // ── Handler: บันทึกการแก้ไข ──────────────────────────────────────────────
-  // รับ FormData จาก BookRow แล้วส่งไปยัง PUT /api/books/:id
   const handleSave = async (bookId, formData) => {
     setSavingId(bookId)
     try {
       const result = await updateBook(bookId, formData)
-      // อัพเดตข้อมูลใน state โดยใช้ข้อมูลใหม่จาก API response
       setBooks((prev) => prev.map((b) => (b.id === bookId ? result.book : b)))
       setEditingId(null)
       setRowStatusTimed(bookId, "success", "แก้ไขสำเร็จ")
     } catch (err) {
-      // แสดง error ใน row แต่ไม่ปิด edit mode ให้ user แก้ไขได้ต่อ
       setRowStatusTimed(bookId, "error", err.message)
     } finally {
       setSavingId(null)
     }
   }
 
-  // ── Handler: ยืนยันการลบ ─────────────────────────────────────────────────
-  // เรียกเมื่อ user กด "ยืนยันลบ" → ส่งไปยัง DELETE /api/books/:id
   const handleDeleteConfirm = async (bookId) => {
     setDeletingId(bookId)
     try {
       await deleteBook(bookId)
-      // ลบออกจาก state — แถวจะหายไปจากตารางทันที
-      // เป็นการ soft delete ปรับ active=false ใน backend แต่ frontend จะไม่แสดงหนังสือที่ active=false อยู่แล้ว จึงเหมือนลบออกไปเลย เพื่อเก็บไว้ทำ history ในอนาคตถ้าต้องการ
       setBooks((prev) => prev.filter((b) => b.id !== bookId))
       setConfirmDeleteId(null)
     } catch (err) {
@@ -130,27 +155,41 @@ export default function ManageProductsPage() {
     }
   }
 
-  // รวม stock เฉพาะ th และ en — ebook ถือเป็น ∞ จึงไม่นับรวม
   const totalPhysicalStock = books.reduce((sum, book) => {
     const physical = book.variants?.filter((v) => v.type !== "ebook") ?? []
     return sum + physical.reduce((s, v) => s + (v.stock ?? 0), 0)
   }, 0)
 
+  // props ที่ส่งให้ BookRow และ BookCardMobile เหมือนกันทุกตัว
+  const rowProps = (book) => ({
+    book,
+    isEditing:        editingId === book.id,
+    confirmingDelete: confirmDeleteId === book.id,
+    status:           rowStatus[book.id] ?? null,
+    isSaving:         savingId === book.id,
+    isDeleting:       deletingId === book.id,
+    onEditStart:      handleEditStart,
+    onSave:           handleSave,
+    onCancel:         () => setEditingId(null),
+    onDeleteRequest:  handleDeleteRequest,
+    onDeleteConfirm:  () => handleDeleteConfirm(book.id),
+    onDeleteCancel:   () => setConfirmDeleteId(null),
+  })
 
-  // ── UI ────────────────────────────────────────────────────────────────────
+
   return (
-    <div className="min-h-screen bg-bg-main py-10 px-4">
+    <div className="min-h-screen bg-bg-main py-8 px-4">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-widest text-text-muted mb-1">
               Admin Panel
             </p>
             <h1 className="font-serif text-3xl text-text-main">จัดการสินค้า</h1>
             <p className="text-sm text-text-muted mt-1">
-              รายการหนังสือทั้งหมดในระบบ — คลิก แก้ไข เพื่อแก้ข้อมูล inline
+              รายการหนังสือทั้งหมดในระบบ — คลิก แก้ไข เพื่อแก้ข้อมูล
             </p>
           </div>
           <button
@@ -176,9 +215,45 @@ export default function ManageProductsPage() {
           </div>
         )}
 
-        {/* ตารางสินค้า */}
-        <div className="bg-white rounded-xl border border-border-color shadow-sm overflow-hidden">
+        {/* ── Mobile view (< md) ───────────────────────────────────────────────── */}
+        <div className="md:hidden">
+          {/* Summary */}
+          {!isLoading && !fetchError && (
+            <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 text-sm text-text-muted">
+              <span>
+                หนังสือทั้งหมด{" "}
+                <span className="font-semibold text-text-main">{books.length}</span> เรื่อง
+              </span>
+              <span>
+                Stock{" "}
+                <span className="font-semibold text-text-main">{totalPhysicalStock.toLocaleString()}</span> เล่ม{" "}
+                <span className="text-xs opacity-60">(ไม่รวม E-Book)</span>
+              </span>
+            </div>
+          )}
 
+          {/* Skeleton */}
+          {isLoading && (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          )}
+
+          {/* Empty */}
+          {!isLoading && !fetchError && books.length === 0 && <EmptyState />}
+
+          {/* Cards */}
+          {!isLoading && (
+            <div className="space-y-3">
+              {books.map((book) => (
+                <BookCardMobile key={book.id} {...rowProps(book)} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Desktop view (≥ md) ──────────────────────────────────────────────── */}
+        <div className="hidden md:block bg-white rounded-xl border border-border-color shadow-sm overflow-hidden">
           {/* Summary bar */}
           {!isLoading && !fetchError && (
             <div className="px-6 py-3.5 border-b border-border-color flex flex-wrap items-center gap-x-6 gap-y-1">
@@ -209,45 +284,18 @@ export default function ManageProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {/* Skeleton ขณะโหลด */}
                 {isLoading && Array.from({ length: 6 }).map((_, i) => (
                   <SkeletonRow key={i} />
                 ))}
 
-                {/* ไม่มีข้อมูล */}
                 {!isLoading && !fetchError && books.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="text-center py-16 text-text-muted">
-                      <svg className="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13
-                             C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253
-                             m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13
-                             C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                        />
-                      </svg>
-                      ยังไม่มีหนังสือในระบบ
-                    </td>
+                    <td colSpan={6}><EmptyState /></td>
                   </tr>
                 )}
 
-                {/* ข้อมูลจริง */}
                 {!isLoading && books.map((book) => (
-                  <BookRow
-                    key={book.id}
-                    book={book}
-                    isEditing={editingId === book.id}
-                    confirmingDelete={confirmDeleteId === book.id}
-                    status={rowStatus[book.id] ?? null}
-                    isSaving={savingId === book.id}
-                    isDeleting={deletingId === book.id}
-                    onEditStart={handleEditStart}
-                    onSave={handleSave}
-                    onCancel={() => setEditingId(null)}
-                    onDeleteRequest={handleDeleteRequest}
-                    onDeleteConfirm={() => handleDeleteConfirm(book.id)}
-                    onDeleteCancel={() => setConfirmDeleteId(null)}
-                  />
+                  <BookRow key={book.id} {...rowProps(book)} />
                 ))}
               </tbody>
             </table>

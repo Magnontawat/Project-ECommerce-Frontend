@@ -1,27 +1,6 @@
 import { useState, useEffect } from "react"
+import { GENRES } from "../../data/constants"
 
-
-// ── หมวดหมู่หนังสือ ──────────────────────────────────────────────────────────
-const GENRES = [
-  { value: "fantasy",    label: "Fantasy" },
-  { value: "romance",    label: "Romance" },
-  { value: "thriller",   label: "Thriller" },
-  { value: "mystery",    label: "Mystery" },
-  { value: "horror",     label: "Horror" },
-  { value: "sci-fi",     label: "Sci-Fi" },
-  { value: "historical", label: "Historical" },
-  { value: "adventure",  label: "Adventure" },
-  { value: "drama",      label: "Drama" },
-  { value: "comedy",     label: "Comedy" },
-  { value: "young-adult",label: "Young Adult" },
-  { value: "literary",   label: "Literary" },
-  { value: "action",     label: "Action" },
-  { value: "BL",         label: "BL" },
-  { value: "GL",         label: "GL" },
-  { value: "other",      label: "อื่นๆ" },
-]
-
-// Map genre value → label สำหรับแสดงผล
 const GENRE_LABEL = Object.fromEntries(GENRES.map((g) => [g.value, g.label]))
 
 // สีของ badge แต่ละ variant type
