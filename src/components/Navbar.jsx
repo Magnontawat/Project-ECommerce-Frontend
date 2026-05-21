@@ -15,7 +15,7 @@ function UserDropdown({ user, logout }) {
   // ปิด dropdown เมื่อคลิกนอกพื้นที่
   useEffect(() => {
     function handleClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false) 
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -215,16 +215,6 @@ export default function Navbar() {
           </svg>
         </button>
 
-        {/* ── เมนูกลาง (Desktop) ── */}
-        {/* TODO: ลิ้งค์ยังไม่ได้ชี้ไปหน้าจริง */}
-        <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-10">
-          <Link to="/" className="text-[0.9rem] text-text-muted hover:text-text-main transition-colors">
-            หนังสือขายดี
-          </Link>
-          <Link to="/" className="text-[0.9rem] text-text-muted hover:text-text-main transition-colors">
-            ใหม่ล่าสุด
-          </Link>
-        </nav>
 
         {/* ── Desktop Right Section ── */}
         <div className="hidden md:flex items-center gap-4">
@@ -257,20 +247,6 @@ export default function Navbar() {
           `}
         >
           <div className="flex flex-col p-4 gap-4">
-            <Link
-              to="/"
-              className="text-text-main font-medium py-2 border-b border-gray-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              หนังสือขายดี
-            </Link>
-            <Link
-              to="/"
-              className="text-text-main font-medium py-2 border-b border-gray-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              ใหม่ล่าสุด
-            </Link>
 
             <div className="flex flex-col gap-3 mt-2">
               {isLoggedIn ? (
