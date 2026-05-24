@@ -178,8 +178,7 @@ export default function AuthDrawer() {
                 <label className="text-[10px] font-bold text-gray-500 tracking-[0.1em] uppercase">
                   รหัสผ่าน
                 </label>
-                {authMode === 'login' && (
-                )}
+                
               </div>
               <div className="relative">
                 <input
