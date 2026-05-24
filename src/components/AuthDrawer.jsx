@@ -179,9 +179,6 @@ export default function AuthDrawer() {
                   รหัสผ่าน
                 </label>
                 {authMode === 'login' && (
-                  <button type="button" className="text-[10px] font-bold text-[#032b82] uppercase hover:underline">
-                    ลืมรหัสผ่าน?
-                  </button>
                 )}
               </div>
               <div className="relative">
